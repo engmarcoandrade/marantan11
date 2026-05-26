@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMDA3OGQ0Ii8+PHRleHQgeD0iOTAiIHk9IjExNSIgZm9udC1zaXplPSI5MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+OrzwvdGV4dD48L3N2Zz4=">
 <title>🎯 Método Marantan</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" onerror="window._chartjsError=true"></script>
+<script src="chart.js"></script>
 <style>
 :root {
   --bg: #f0f0f0;
@@ -1282,7 +1282,8 @@ body.dark-mode .seq-res-btn.ativo-l { background: rgba(196,43,28,0.15); }
             <thead>
               <tr style="background:#e8eef5">
                 <th style="padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap">Seq</th>
-                <th style="padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap">Letra</th>
+                <th style="padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap">Seq</th>
+                <th style="padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap">Neg.</th>
                 <th style="padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap">Lado</th>
                 <th style="padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap">Operação (R$)</th>
                 <th style="padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap">Resultado</th>
@@ -1678,10 +1679,10 @@ window.onerror = function(msg, src, line) {
 // ════════════════════════════════════════════
 const DEFAULT_CFG = {
   capital: 500, banco: 0, plataforma: 500,
-  base_pct: 0.5, odd: 1.83, meta_pct: 2,
-  limite: 50, incr: 15, incr_ganho: 10, gatilho: 3, retorno: 50, lote_qtd: 6, letras_qtd: 2,
+  base_pct: 0.5, odd: 1.75, meta_pct: 2,
+  limite: 50, incr: 15, incr_ganho: 0, gatilho: 4, retorno: 40, lote_qtd: 6, letras_qtd: 2,
   stop_loss: 8, teto_aposta: 3,
-  ativo: 'Ambos Marcam', opcao_a: 'Ambos NÃO', opcao_b: 'Ambos SIM'
+  ativo: 'Ambos Marcam', opcao_a: 'Ambos NÃO Marcam', opcao_b: 'Ambos SIM Marcam'
 };
 const DEFAULT_PWD = "123";
 
@@ -2016,12 +2017,19 @@ function renderLote() {
     tdSeq.innerHTML = `<span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--muted)">${i+1}</span>`;
     tr.appendChild(tdSeq);
 
-    // Letra + streak (negativos consecutivos com fonte grande)
+    // Coluna: Letra (identificador da sequência)
     const tdLetra = document.createElement('td');
     tdLetra.style.cssText = 'padding:8px 12px;text-align:center;border-bottom:1px solid rgba(0,0,0,0.04)';
-    tdLetra.innerHTML = `<span style="background:${letraCor};color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;border-radius:20px;padding:3px 10px">${item.label_ab}</span>`
-      + (streak > 0 ? `<div style="color:#c42b1c;font-family:'DM Mono',monospace;font-size:22px;font-weight:800;line-height:1;margin-top:3px">🔴 ${streak}</div>` : '');
+    tdLetra.innerHTML = `<span style="background:${letraCor};color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;border-radius:20px;padding:3px 10px">${item.label_ab}</span>`;
     tr.appendChild(tdLetra);
+
+    // Coluna: Negativos consecutivos
+    const tdStreak = document.createElement('td');
+    tdStreak.style.cssText = 'padding:8px 12px;text-align:center;border-bottom:1px solid rgba(0,0,0,0.04)';
+    tdStreak.innerHTML = streak > 0
+      ? `<span style="color:#c42b1c;font-family:'DM Mono',monospace;font-size:22px;font-weight:800;line-height:1">🔴 ${streak}</span>`
+      : `<span style="color:var(--muted);font-size:13px">—</span>`;
+    tr.appendChild(tdStreak);
 
     // Lado
     const tdLado = document.createElement('td');
@@ -2786,6 +2794,21 @@ function tocarSomAlerta(tipo) {
 }
 
 // Verifica alertas após cada confirmação
+function calcLadoSugerido() {
+  const cfg = STATE.cfg;
+  for (let i = 0; i < STATE.seqs.length; i++) {
+    const streak = getStreak(STATE.seqs[i]);
+    if (streak >= cfg.gatilho) {
+      const seq = STATE.seqs[i];
+      if (seq.length > 0) {
+        const ultimoLado = seq[seq.length - 1].lado || cfg.opcao_a;
+        return ultimoLado === cfg.opcao_a ? cfg.opcao_b : cfg.opcao_a;
+      }
+    }
+  }
+  return cfg.opcao_a || 'Opção A';
+}
+
 function verificarAlertas() {
   const cfg     = STATE.cfg;
   const saldo   = calcSaldoGlobal();
